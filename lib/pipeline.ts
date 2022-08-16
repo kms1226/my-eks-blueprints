@@ -10,20 +10,15 @@ export default class PipelineConstruct extends Construct {
     const account = props?.env?.account!;
     const region = props?.env?.region!;
 
+    const addOn = new blueprints.addons.ArgoCDAddOn();
+
     const blueprint = blueprints.EksBlueprint.builder()
     .account(account)
     .region(region)
-    .addOns()
+    .addOns(addOn)
     .teams();
   
     blueprints.CodePipelineStack.builder()
-      .wave({
-        id: "envs",
-        stages: [   
-          { id: "dev", stackBuilder: blueprint.clone('us-east-1')},
-          { id: "prod", stackBuilder: blueprint.clone('ap-northeast-2')}
-        ]
-      })
       .name("eks-blueprints-workshop-pipeline")
       .owner("kms1226")
       .repository({
@@ -31,7 +26,13 @@ export default class PipelineConstruct extends Construct {
           credentialsSecretName: 'github-token',
           targetRevision: 'main'
       })
+      .wave({
+        id: "envs",
+        stages: [
+          { id: "dev", stackBuilder: blueprint.clone('us-east-1')},
+          { id: "prod", stackBuilder: blueprint.clone('ap-northeast-2')}
+        ]
+      })
       .build(scope, id+'-stack', props);
-      
   }
 }
